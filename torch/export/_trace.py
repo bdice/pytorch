@@ -509,13 +509,6 @@ def _export_non_strict(
     if isinstance(mod, torch.fx.GraphModule) and hasattr(mod, "meta"):
         gm.meta.update(mod.meta)
 
-    if pre_dispatch:
-        from torch._export.passes.replace_set_grad_with_hop_pass import (
-            replace_set_grad_with_hop_pass,
-        )
-
-        gm = replace_set_grad_with_hop_pass(gm)
-
     # Remove nn_module_stack, stack_trace metadata from all placeholders/inputs nodes.
     for _mod in gm.modules():
         if not isinstance(_mod, torch.fx.GraphModule):
@@ -618,6 +611,13 @@ def _export_non_strict(
         fake_params_buffers,
         constants,
     )
+
+    if pre_dispatch:
+        from torch._export.passes.replace_set_grad_with_hop_pass import (
+            replace_set_grad_with_hop_pass,
+        )
+
+        gm = replace_set_grad_with_hop_pass(gm, export_graph_signature)
 
     @dataclasses.dataclass
     class _ExportedProgramNonStrict:
